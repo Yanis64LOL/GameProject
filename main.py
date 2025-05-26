@@ -47,7 +47,7 @@ tile_size = 32
 tile_type = len(os.listdir('Default/Asset_game/Terrain'))
 
 #Le numéro du level
-level = 2
+level = 1
 max_level = 2
 
 start_game = False
@@ -58,11 +58,12 @@ pygame.mixer.music.load(f'{texture_nom}/Audio/Musique.mp3')
 pygame.mixer.music.set_volume(1)
 pygame.mixer.music.play(-1, 0.0)
 
+#Mise à jour de la musique
 def update_musique(texture_nom):
     pygame.mixer.music.load(f'{texture_nom}/Audio/Musique.mp3')
     pygame.mixer.music.set_volume(1)
     pygame.mixer.music.play(-1, 0.0)
-
+#Mise à jour des sound effect
 def update_sfx(texture_nom):
     jump = pygame.mixer.Sound(f'{texture_nom}/Audio/Jump.mp3')
     damage = pygame.mixer.Sound(f'{texture_nom}/Audio/Hit.mp3')
@@ -80,6 +81,7 @@ def update_sfx(texture_nom):
 
 jump_sfx, damage_sfx, piece_sfx, end_sfx, death_sfx = update_sfx(texture_nom)
 
+#Charge les boutons
 start_img = pygame.image.load('Button/Play/play01.png').convert_alpha()
 restart_img = pygame.image.load('Button/Restart/restart01.png').convert_alpha()
 option_img1 = pygame.image.load('Button/Option/option01.png').convert_alpha()
@@ -97,6 +99,7 @@ img_bg_m = pygame.image.load('Mario/Asset_game/BackGround/backgrounds1.png')
 #Chargement de toutes les images des tuiles
 font = pygame.font.SysFont('Arial', 30)
 
+#Fonction pour le debug mode
 def Debug_mode():
     pygame.draw.rect(screen, (0, 255, 0), player.rect, 2)
     pygame.draw.rect(screen, (0, 255, 0), enemy.rect, 2)
@@ -108,16 +111,11 @@ def Debug_mode():
     Draw_text(f"Score : {score}", font, (255, 0, 0), 0, 120)
     Draw_text(f"{int(clock.get_fps())}", font,(255, 0, 0), 700, 0)
 
-def draw_text(text, font, text_col, x, y):
-    img = font.render(text, True, text_col)
-    screen.blit(img, (x,y))
-
-
 #Dessin du fond
 def draw_bg(texture_nom):
     screen.fill(BG)
     for x in range(100):
-        if texture_nom == "Default":
+        if texture_nom == "Default": #Dessine le fond pour le mode Default
             screen.blit(img_bg1_d, ((x * img_bg1_d.get_width()) - bg_scroll, 600 - img_bg1_d.get_height()))
             screen.blit(img_bg2_d, ((x * img_bg2_d.get_width()) - bg_scroll * 0.5, 600 - img_bg2_d.get_height() - 109))
             screen.blit(img_bg2_d, ((x * img_bg3_d.get_width()) - bg_scroll * 0.6, 600 - img_bg2_d.get_height() - 115))
@@ -127,20 +125,23 @@ def draw_bg(texture_nom):
             screen.blit(img_bg4_d, (((x * img_bg4_d.get_width() * 6) - bg_scroll * 0.7) - 200, 600 - img_bg2_d.get_height() - 431))
             screen.blit(img_bg4_d, (((x * img_bg4_d.get_width() * 6) - bg_scroll * 0.75) - 325, 600 - img_bg2_d.get_height() - 261))
             screen.blit(pygame.transform.flip(img_bg4_d, True, False), (((x * img_bg3_d.get_width() * 6) - bg_scroll * 0.65) - 200, 600 - img_bg2_d.get_height() - 347))
-        elif texture_nom == "Mario":
+        elif texture_nom == "Mario": #Dessine le fond pour le mode Mario
             screen.blit(img_bg_m, ((x * img_bg_m.get_width()) - bg_scroll* 0.7, 600 - img_bg_m.get_height()))
 
-
+#Fonction pour afficher le texte
 def Draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x,y))
 
+#Fonction pour réinisitialisé le monde
 def reset_level():
+    # Vide tout les groupe
     enemy_group.empty()
     decoration_group.empty()
     sortie_group.empty()
     piece_group.empty()
 
+    #Vide toutes les données de la carte
     data = []
 
     for row in range(lignes):
@@ -149,11 +150,22 @@ def reset_level():
 
     return data
 
+#Mise à jour de la texture des tuiles
+def update_texture_tile(texture_nom):
+    img_list = []
+    for x in range(tile_type):
+        img = pygame.image.load(f'{texture_nom}/Asset_game/Terrain/{x}.png').convert_alpha()
+        img = pygame.transform.scale(img, (tile_size, tile_size))
+        img_list.append(img)
+    return img_list
+
+img_list = update_texture_tile(dico_texture[current_texture_index])
+
 
 #Classe du joueur ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Player(pygame.sprite.Sprite):
-    #Initialisation de toutes, les variables, les images, des collisions du Joueur
+    #Initialisation de toutes, les variables, les images, des collisions du Joueur dans le constructeur.
     def __init__(self, type, x, y, scale, speed, dico_textures):
         pygame.sprite.Sprite.__init__(self)
         self.alive = True
@@ -174,7 +186,7 @@ class Player(pygame.sprite.Sprite):
         self.frame_index = 0
         self.action = 0
         self.update_time = pygame.time.get_ticks()
-        #Variable pour l'IA
+        #Attribut pour l'IA
         self.move_counter = 0
         self.idling = False
         self.idling_counter =0
@@ -201,6 +213,7 @@ class Player(pygame.sprite.Sprite):
         dx = 0
         dy = 0
 
+        #Pemet de fair bouger le personnage vers la droite
         if moving_left:
             dx = -self.speed
             self.flip = True
@@ -210,17 +223,19 @@ class Player(pygame.sprite.Sprite):
             self.flip = False
             self.direction = 1
 
-
+        #Permet de faire le saut
         if self.jump == True and self.in_air == False:
             self.vel_y = -15
             self.jump = False
             self.in_air = True
 
+        #Met la gravité sur le joueur
         self.vel_y += gravity
         if self.vel_y > 10:
             self.vel_y = self.vel_y
         dy += self.vel_y
 
+        #Détecte les collision avec le monde
         for tile in world.obstacle_list:
              if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                  dx = 0
@@ -233,16 +248,19 @@ class Player(pygame.sprite.Sprite):
                     self.in_air = False
                     dy =  tile[1].top - self.rect.bottom
 
+        #Lorqu'il touche le drapeau finit le niveau
         level_complete = False
         if pygame.sprite.spritecollide(self, sortie_group, False):
             level_complete = True
 
+        #Lorqu'il touche le sol, il meurt
         if self.rect.bottom > 600:
             self.health = 0
 
         self.rect.x += dx
         self.rect.y += dy
 
+        #Permet de faire bouger toute la carte
         if self.type == 'Player':
             if (self.rect.right > 800 - scroll_thresh and bg_scroll < (world.level_length * tile_size) - 800) \
                     or (self.rect.left < scroll_thresh and bg_scroll > abs(dx)):
@@ -252,13 +270,16 @@ class Player(pygame.sprite.Sprite):
 
         return screen_scroll, level_complete
 
+    #Méthodes IA pour les ennemies
     def IA(self):
         if self.alive and player.alive:
+            #Il bouge et il s'arrete de façon aléatoire
             if self.idling == False and random.randint(1, 150) == 1:
-                self.update_action(0)
+                self.update_action(0)# Action pour Arrêt
                 self.idling = True
                 self.idling_counter = 200
 
+            #Si il ne s'arrete pas bouge de façon aléatoire
             if self.idling == False:
                 if self.direction == 1:
                     ai_moving_right = True
@@ -266,19 +287,18 @@ class Player(pygame.sprite.Sprite):
                     ai_moving_right = False
                 ai_moving_left = not ai_moving_right
                 self.move(ai_moving_left, ai_moving_right)
-                self.update_action(1)
+                self.update_action(1) #Action pour bouger
                 self.move_counter += 1
-
                 if self.move_counter > tile_size:
                     self.direction *= -1
                     self.move_counter *= -1
-            else:
+            else: #Sinon,  il s'arrête
                 self.idling_counter -= 1
                 if self.idling_counter <= 0:
                     self.idling = False
 
         self.rect.x += screen_scroll
-    #Mise à jour du joueur
+    #Mise à jour des animations du joueur
     def update_animation(self):
         animation_cooldown = 100
         self.image = self.animation_list[self.action][self.frame_index]
@@ -294,14 +314,14 @@ class Player(pygame.sprite.Sprite):
             self.action = new_action
             self.frame_index = 0
             self.update_time = pygame.time.get_ticks()
-
+    #Mise à jour du rectangle du Joueur
     def update_rect(self):
         # Met à jour le rect et les dimensions du joueur
         old_center = self.rect.center
         self.rect = self.image.get_rect(center=old_center)
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-
+    #Mise à jour des Textures
     def update_texture(self, new_texture):
         if new_texture != self.texture:
             self.texture = new_texture
@@ -325,7 +345,7 @@ class Player(pygame.sprite.Sprite):
             self.update_rect()
 
 
-
+    #Réunis toutes les updates
     def update(self):
         self.update_animation()
         self.check_alive()
@@ -334,29 +354,29 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(player, enemy_group, False) and player.alive:
             player.damage()
 
-
+    #Méthodes pour les dégâts
     def damage(self):
-        if self.damage_cooldown == 0:
+        if self.damage_cooldown == 0:#Temps de vulnérabilité
             self.damage_cooldown = 100
             self.health -= 1
-            damage_sfx.play()
+            damage_sfx.play()#Son pour les dégâts
 
-    def check_alive(self):
+    def check_alive(self):#Méthodes pour check s'il est en vie
         if self.health == 0:
             self.health = 0
             self.speed = 0
             self.alive = False
-            self.update_action(3)
+            self.update_action(3) # Action : Mort
 
 
-
+    #Permet de dessiner le joueur
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
 
 # Classe Barre de vie -----------------------------------------------------------------------------------------------------------------------------
 
 class Bar_de_vie():
-    def __init__(self, x, y,  health, scale,):
+    def __init__(self, x, y,  health, scale,):#Constructeur pour la barre de vie
         self.x= x
         self.y = y
         self.health = health
@@ -365,19 +385,19 @@ class Bar_de_vie():
         image = pygame.transform.scale(image, (int(image.get_width() * scale), int(image.get_height() * scale)))
         self.image = image
         self.rect = self.image.get_rect()
-
+    #Mise à jour de la barre de vie
     def update_health(self, health):
         self.new_health = health
         self.image = pygame.image.load(f'Health Heart/Health {self.new_health}.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (int(self.image.get_width() * self.scale), int(self.image.get_height() * self.scale)))
-
+    #Dessine la barre de vie
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, False, False), self.rect)
 
 #Classe Decoration -----------------------------------------------------------------------------------------------------------------------------
 
 class Decoration(pygame.sprite.Sprite):
-    def __init__(self, animation_type, scale, x, y, ):
+    def __init__(self, animation_type, scale, x, y, ): #Constructeur pour les Décorations
         pygame.sprite.Sprite.__init__(self)
         self.update_time = pygame.time.get_ticks()
         self.animation_list = []
@@ -394,7 +414,7 @@ class Decoration(pygame.sprite.Sprite):
         self.image = self.animation_list[0][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-
+    #Mise à jour des animations
     def update_animation(self):
         animation_cooldown = 150
         self.image = self.animation_list[0][self.frame_index]
@@ -404,7 +424,7 @@ class Decoration(pygame.sprite.Sprite):
         if self.frame_index >= len(self.animation_list[0]):
             self.frame_index = 0
         self.rect.x += screen_scroll
-
+    #Mise à jour des textures
     def update_texture(self, new_texture):
         if new_texture != self.texture:
             self.texture = new_texture
@@ -427,7 +447,7 @@ class Decoration(pygame.sprite.Sprite):
             self.update_time = pygame.time.get_ticks()
             self.image = self.animation_list[self.action][self.frame_index]
             self.update_rect()
-
+    #Dessine les décorations
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, False, False), self.rect)
 
@@ -435,7 +455,7 @@ class Decoration(pygame.sprite.Sprite):
 #Classe de Piece ---------------------------------------------------------------------------------------------------------
 
 class Piece(pygame.sprite.Sprite):
-    def __init__(self,scale, x, y):
+    def __init__(self,scale, x, y): #Constructeur pour les pieces
         pygame.sprite.Sprite.__init__(self)
         self.update_time = pygame.time.get_ticks()
         self.animation_list = []
@@ -450,7 +470,7 @@ class Piece(pygame.sprite.Sprite):
         self.image = self.animation_list[0][self.frame_index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-
+    #Mise à jour des animations
     def update_animation(self):
         animation_cooldown = 100
         self.image = self.animation_list[0][self.frame_index]
@@ -460,13 +480,13 @@ class Piece(pygame.sprite.Sprite):
         if self.frame_index >= len(self.animation_list[0]):
             self.frame_index = 0
         self.rect.x += screen_scroll
-
+    #Dessine les pieces
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, False, False), self.rect)
 
 #Classe de Sortie ----------------------------------------------------------------------------------------------------
 class Sortie(pygame.sprite.Sprite):
-    def __init__(self,scale, x, y, dico_texture):
+    def __init__(self,scale, x, y, dico_texture):#Constructeur pour les sorties
         pygame.sprite.Sprite.__init__(self)
         self.update_time = pygame.time.get_ticks()
         self.animation_list = []
@@ -483,7 +503,7 @@ class Sortie(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
-    def update_animation(self):
+    def update_animation(self): #Mise à jour des animations
         animation_cooldown = 150
         self.image = self.animation_list[0][self.frame_index]
         if pygame.time.get_ticks() - self.update_time > animation_cooldown:
@@ -492,14 +512,14 @@ class Sortie(pygame.sprite.Sprite):
         if self.frame_index >= len(self.animation_list[0]):
             self.frame_index = 0
         self.rect.x += screen_scroll
-
+    #Dessine la sortie
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, False, False), self.rect)
 
 # Classe du bouton -----------------------------------------------------------------------------------------------------------------------------
 
 class Button():
-    def __init__(self, x, y, image, scale):
+    def __init__(self, x, y, image, scale): #Constructeur des boutons
         width = image.get_width()
         height = image.get_height()
         self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
@@ -507,12 +527,11 @@ class Button():
         self.rect.topleft = (x, y)
         self.clicked = False
 
+    #Dessine les boutons
     def draw(self, surface):
         action = False
-
         pos = pygame.mouse.get_pos()
-
-        if self.rect.collidepoint(pos):
+        if self.rect.collidepoint(pos):#Permet de cliquer sur les boutons
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
                 action = True
                 self.clicked = True
@@ -522,49 +541,37 @@ class Button():
         surface.blit(self.image, (self.rect.x, self.rect.y))
 
         return action
-
-enemy_group = pygame.sprite.Group()
-decoration_group = pygame.sprite.Group()
-piece_group = pygame.sprite.Group()
-
+#Classe pour les transitions -------------------------------------------------------------------------------------------------------------
 class ScreenFade():
-    def __init__(self, direction, colour, speed):
+    def __init__(self, direction, colour, speed):# Constructeur pour les transitions
         self.direction = direction
         self.colour = colour
         self.speed = speed
         self.fade_counter = 0
-
+    #Méthodes pour les transitions
     def fade(self):
         fade_complete = False
         self.fade_counter += self.speed
-        if self.direction == 1:
+        if self.direction == 1:#Tansitions vers le centre
             pygame.draw.rect(screen, self.colour, (0- self.fade_counter, 0, 800 //2, 600))
             pygame.draw.rect(screen, self.colour, (800 //2 + self.fade_counter, 0, 800, 600))
             pygame.draw.rect(screen, self.colour, (0, 0- self.fade_counter, 800, 600))
             pygame.draw.rect(screen, self.colour, (0, 600 //2 + self.fade_counter, 800, 600))
-        if self.direction == 2:
+        if self.direction == 2:#Transition du aut vers le bas
             pygame.draw.rect(screen, self.colour, (0, 0, 800, 0 + self.fade_counter))
         if self.fade_counter >= 600:
             fade_complete = True
 
         return fade_complete
 
+#Instance pour les transitions
 intro_fade = ScreenFade(1, (0, 0, 0), 4)
 death_fade = ScreenFade(2, (255, 0, 0), 4)
 
-def update_texture_tile(texture_nom):
-    img_list = []
-    for x in range(tile_type):
-        img = pygame.image.load(f'{texture_nom}/Asset_game/Terrain/{x}.png').convert_alpha()
-        img = pygame.transform.scale(img, (tile_size, tile_size))
-        img_list.append(img)
-    return img_list
 
-img_list = update_texture_tile(dico_texture[current_texture_index])
 # Classe de la carte --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 class World():
-    #Initialisation des variables
-    def __init__(self):
+    def __init__(self): #Constructeur pour le monde
         self.obstacle_list =[]
         self.transparent_list = []
 
@@ -579,25 +586,25 @@ class World():
                     img_rect.x = x * tile_size
                     img_rect.y = y * tile_size
                     tile_data = (img, img_rect)
-                    if tile >= 0 and tile <= 53:
+                    if tile >= 0 and tile <= 53:#Met dans une liste de collision
                         self.obstacle_list.append(tile_data)
                     if tile == 54:
-                        self.transparent_list.append(tile_data)
+                        self.transparent_list.append(tile_data)#Met dans une liste pour traversé
                     if tile >= 55 and tile <= 84:
                         self.obstacle_list.append(tile_data)
-                    if tile == 85:
+                    if tile == 85:#Permet de placer le joueur
                         player = Player("Player", x*tile_size, y*tile_size, 1.75, 5, dico_texture)
                         barre_de_vie = Bar_de_vie(150, 0, player.health, 3)
-                    if tile == 86:
+                    if tile == 86:#Permet de placer l'ennemie
                         enemy = Player("Enemy", x*tile_size, y*tile_size, 1.65, 2, dico_texture)
                         enemy_group.add(enemy)
-                    if tile == 87:
+                    if tile == 87:#Permet de placer les Décorations
                         decoration = Decoration("Arbre_milieu", 2, x*tile_size, (y*tile_size)-30)
                         decoration_group.add(decoration)
-                    if tile == 88:
+                    if tile == 88:#Permet de placer la sortie
                         sortie = Sortie(2, x*tile_size, (y*tile_size)-60, dico_texture)
                         sortie_group.add(sortie)
-                    if tile == 89:
+                    if tile == 89:#Permet de placer les pieces
                         piece = Piece(2, x*tile_size, y*tile_size)
                         piece_group.add(piece)
 
@@ -611,16 +618,16 @@ class World():
             tile[1][0] += screen_scroll
             screen.blit(tile[0], tile[1])
 
+#Regroupe toutes les sprites des ennemies, des décorations et des pieces
+enemy_group = pygame.sprite.Group()
+decoration_group = pygame.sprite.Group()
+piece_group = pygame.sprite.Group()
+sortie_group = pygame.sprite.Group()
 
+#Instance des boutons
 start_button = Button(800 // 2 - 150, 600 //2 - 120, start_img, 2)
 restart_button = Button(800 // 2 - 150, 600 // 2 - 150, restart_img, 2)
 
-
-
-enemy_group = pygame.sprite.Group()
-decoration_group = pygame.sprite.Group()
-sortie_group = pygame.sprite.Group()
-#Groupe tous les ennemis
 
 #Initialisation d'une carte
 world_data = []
@@ -628,8 +635,9 @@ for row in range(lignes):
     r = [-1] * colonne
     world_data.append(r)
 
-#Ouvre le tableau csv qui est la carte
+#Fonction pour la carte
 def Carte_csv():
+    # Ouvre le tableau csv qui est la carte
     with open(f'Niveau/Niveau {level}.csv', newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         for x, ligne in enumerate(reader):
@@ -641,6 +649,7 @@ world_data = Carte_csv()
 #Appel de toutes les classes (World, Player)---------------------------------------------------------------------------------------------------------------------------------------
 run = True
 
+#Affiche le message d'erreur
 try:
     world = World()
     player, barre_de_vie = world.process_data(world_data)
