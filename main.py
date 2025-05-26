@@ -213,7 +213,7 @@ class Player(pygame.sprite.Sprite):
         dx = 0
         dy = 0
 
-        #Pemet de fair bouger le personnage vers la droite
+        #Pemet de faire bouger le personnage vers la droite
         if moving_left:
             dx = -self.speed
             self.flip = True
@@ -235,7 +235,7 @@ class Player(pygame.sprite.Sprite):
             self.vel_y = self.vel_y
         dy += self.vel_y
 
-        #Détecte les collision avec le monde
+        #Détecte les collisions avec le monde
         for tile in world.obstacle_list:
              if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
                  dx = 0
@@ -273,13 +273,13 @@ class Player(pygame.sprite.Sprite):
     #Méthodes IA pour les ennemies
     def IA(self):
         if self.alive and player.alive:
-            #Il bouge et il s'arrete de façon aléatoire
+            #Il bouge et il s'arrête de façon aléatoire
             if self.idling == False and random.randint(1, 150) == 1:
                 self.update_action(0)# Action pour Arrêt
                 self.idling = True
                 self.idling_counter = 200
 
-            #Si il ne s'arrete pas bouge de façon aléatoire
+            #Si, il ne s'arrête pas bouge de façon aléatoire
             if self.idling == False:
                 if self.direction == 1:
                     ai_moving_right = True
@@ -361,7 +361,7 @@ class Player(pygame.sprite.Sprite):
             self.health -= 1
             damage_sfx.play()#Son pour les dégâts
 
-    def check_alive(self):#Méthodes pour check s'il est en vie
+    def check_alive(self):#Méthodes pour check si, il est en vie
         if self.health == 0:
             self.health = 0
             self.speed = 0
@@ -670,9 +670,9 @@ moving_right = False
 while run:
     clock.tick(FPS)
 
-    if start_game == False:
+    if start_game == False:#Si le jeu ne se lance pas affiche le bouton jouer
         screen.fill(BG)
-        if start_button.draw(screen):
+        if start_button.draw(screen):#Si, il clique sur le bouton lance le jeu
             start_game = True
             start_intro = True
 
@@ -705,28 +705,28 @@ while run:
         if debug_mode:
             Debug_mode()
 
-        if start_intro == True:
+        if start_intro == True:#Met l'intro de début de jeu
             if intro_fade.fade():
                 start_intro = False
                 intro_fade.fade_counter = 0
 
 
-        if player.alive:
+        if player.alive:#Si, il est vivant
             if pygame.sprite.spritecollide(player, piece_group, True):
                 score += 1
                 piece_sfx.play()
             if player.in_air:
-                player.update_action(2)
+                player.update_action(2)#Animation pour le saut
             elif moving_left or moving_right:
-                player.update_action(1)
+                player.update_action(1)#Animation pour marcher
             else:
-                player.update_action(0)
+                player.update_action(0)#Animation d'arrêt
             screen_scroll, level_complete = player.move(moving_left, moving_right)
             bg_scroll -= screen_scroll
-            if level_complete:
-                end_sfx.play()
-                start_intro = True
-                level += 1
+            if level_complete:#Si le jeu est fini lance le niveau suivant
+                end_sfx.play()#Met le son de fin
+                start_intro = True #Met une nouvelle intro
+                level += 1 #Met le niveau suivant
                 bg_scroll = 0
                 world_data = reset_level()
                 if level <= max_level:
@@ -737,18 +737,17 @@ while run:
                                 world_data[x][y] = int(tile)
                     world = World()
                     player, barre_de_vie = world.process_data(world_data)
-                    player, barre_de_vie = world.process_data(world_data)
                     player.update_texture(current_texture_index)
                     texture_nom = dico_texture[current_texture_index]
 
                     jump_sfx, damage_sfx, piece_sfx, end_sfx, death_sfx = update_sfx(texture_nom)
 
-        else:
+        else:#Sinon, il est mort
             screen_scroll = 0
-            if death_sound_counter > 0:
+            if death_sound_counter > 0:#Joue une fois le son de mort
                 death_sfx.play()
                 death_sound_counter -= 1
-            if death_fade.fade():
+            if death_fade.fade():#Met la transition de la mort
                 if restart_button.draw(screen):
                     death_fade.fade_counter = 0
                     start_intro = True
